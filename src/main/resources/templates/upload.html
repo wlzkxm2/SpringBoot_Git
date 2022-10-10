@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en" xmlns:th="https://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Probono FileUpload Page</title>
+</head>
+<body>
+<div class = "container">
+  <h1 style="color: red">User Login Form</h1>
+  <form method="post" th:action="@{/upload}" enctype="multipart/form-data">
+    <input multiple type="file" name = "files">
+    <button type="submit">submit</button>
+  </form>
+
+</div>
+</body>
+</html>

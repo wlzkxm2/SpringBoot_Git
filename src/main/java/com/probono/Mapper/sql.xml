@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.probono.Mapper.UserMapper">
+    <insert id="saveUser" parameterType="com.probono.entity.User">
+        INSERT INTO `userdb`.`user`
+            (`userid`,`password`, `address_city`, `address_state`, `age`, `email`, `phone_number`, `zipcode`, `password`)
+        VALUES ('#{userID}', '#{password}', '#{address_city}', '#{address_state}', '#{age}', '#{email}', '#{phone_number}', '#{zipcode}');
+    </insert>
+</mapper>
