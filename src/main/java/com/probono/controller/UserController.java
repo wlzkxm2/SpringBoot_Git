@@ -59,7 +59,7 @@ public class UserController {
 
 			File destinationFile;
 			String destinationFileName;
-			String fileUrl = "D:\\Shingu\\shingu\\SpringBootDocument\\probono_login\\src\\main\\src\\main\\resources\\static\\SpringDB\\";	// 다운경로
+			String fileUrl = "D:\\Shingu\\shingu\\SpringBoot_Git\\probono_login\\src\\main\\src\\main\\resources\\static\\SpringDB\\";	// 다운경로
 
 			do{
 				destinationFileName = RandomStringUtils.randomAlphanumeric(32) + "." + sourceFileExtension;		// 파일 이름 랜덤 암호화
@@ -125,7 +125,7 @@ public class UserController {
 // 업로드 되어있는 파일 다운
 		@GetMapping("/download/{fileName:.+}")
 		public void download(HttpServletResponse response, HttpServletRequest request, @PathVariable String fileName) throws IOException{
-			String path = "D:\\Shingu\\shingu\\SpringBootDocument\\probono_login\\src\\main\\src\\main\\resources\\static\\SpringDB\\" + fileName;
+			String path = "D:\\Shingu\\shingu\\SpringBoot_Git\\probono_login\\src\\main\\src\\main\\resources\\static\\SpringDB\\" + fileName;
 			byte[] fileByte = FileUtils.readFileToByteArray(new File(path));
 
 			response.setContentType("application/octet-stream");
