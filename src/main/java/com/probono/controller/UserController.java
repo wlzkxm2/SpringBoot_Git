@@ -1,10 +1,12 @@
 package com.probono.controller;
 
+import com.probono.S3.FileDataService;
+import com.probono.S3.S3UploaderService;
 import com.probono.entity.Files;
 import com.probono.entity.User;
 import com.probono.repo.FileRepo;
 import com.probono.repo.UserRepo;
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -15,8 +17,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -25,6 +25,8 @@ import java.net.URLEncoder;
 import java.util.*;
 
 @Controller
+@RestController
+@Slf4j
 public class UserController {
 
 	@Autowired(required = true)
@@ -32,6 +34,7 @@ public class UserController {
 
 	@Autowired(required = true)
 	private FileRepo fileRepo;
+
 
 //	private FileService fileService;
 	
@@ -42,10 +45,16 @@ public class UserController {
 		return "upload";		// 반환해주는 html이름
 	}
 
+	private final FileDataService fileDataService;
+
+	public UserController(FileDataService fileDataService){
+		this.fileDataService = fileDataService;
+	}
+
 // 업로드한 파일 설정
 	@RequestMapping(value = {"/upload"})
 	public ResponseEntity<Map<String, String>> upload(List<MultipartFile> files, HttpServletRequest request) {
-
+/*
 		files.forEach(file -> {
 			System.out.println(file.getContentType());	// 업로드 받은 파일 타입 디버깅
 			System.out.println(file.getOriginalFilename());	// 업로드 받은 받은 파일 이름
@@ -54,12 +63,16 @@ public class UserController {
 			String sourceFileExtension = FilenameUtils.getExtension(sourceFileName).toLowerCase();	// 업로드 받은 원본파일 소문자로 저장
 			int inputid = sourceFileName.lastIndexOf("_");
 			String findid = sourceFileName.substring(0, inputid);
+			System.out.println("에러1 ");
 
 			FilenameUtils.removeExtension(sourceFileName);
 
 			File destinationFile;
 			String destinationFileName;
-			String fileUrl = "D:\\Shingu\\shingu\\SpringBoot_Git\\probono_login\\src\\main\\src\\main\\resources\\static\\SpringDB\\";	// 다운경로
+			String fileUrl = "\\home\\ec2-user\\SpringDB\\";	// 다운경로
+
+
+			System.out.println("에러 2");
 
 			do{
 				destinationFileName = RandomStringUtils.randomAlphanumeric(32) + "." + sourceFileExtension;		// 파일 이름 랜덤 암호화
@@ -71,6 +84,7 @@ public class UserController {
 				file.transferTo(destinationFile);
 
 			} catch (IOException e) {
+				System.out.println("에러 : " + e);
 				throw new RuntimeException(e);
 			}
 
@@ -115,6 +129,30 @@ public class UserController {
 
 
 		return ResponseEntity.ok(resultMap);
+ */
+
+		files.forEach(file -> {
+
+			try{
+//				Files saveFile = new Files();
+//				saveFile.setFilename(destinationFileName);
+//				saveFile.setFileOriname(sourceFileName);
+//				saveFile.setFileUrl(fileUrl);
+//				saveFile.setUserID(findid);
+//				Files addFile = fileRepo.save(saveFile);
+
+
+			} catch (Exception e){
+
+			}
+
+		});
+
+		HashMap<String, String> resultMap = new HashMap<>();
+		resultMap.put("result", "success");
+
+
+		return ResponseEntity.ok(resultMap);
 	}
 
 	@RestController
@@ -125,7 +163,7 @@ public class UserController {
 // 업로드 되어있는 파일 다운
 		@GetMapping("/download/{fileName:.+}")
 		public void download(HttpServletResponse response, HttpServletRequest request, @PathVariable String fileName) throws IOException{
-			String path = "D:\\Shingu\\shingu\\SpringBoot_Git\\probono_login\\src\\main\\src\\main\\resources\\static\\SpringDB\\" + fileName;
+			String path = "\\home\\ec2-user\\SpringDB\\" + fileName;
 			byte[] fileByte = FileUtils.readFileToByteArray(new File(path));
 
 			response.setContentType("application/octet-stream");
