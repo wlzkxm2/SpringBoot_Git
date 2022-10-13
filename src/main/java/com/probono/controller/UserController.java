@@ -1,6 +1,5 @@
 package com.probono.controller;
 
-import com.probono.S3.FileDataService;
 import com.probono.S3.S3UploaderService;
 import com.probono.entity.Files;
 import com.probono.entity.User;
@@ -8,8 +7,6 @@ import com.probono.repo.FileRepo;
 import com.probono.repo.UserRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -35,6 +32,23 @@ public class UserController {
 	@Autowired(required = true)
 	private FileRepo fileRepo;
 
+	private final S3UploaderService s3Uploader;
+
+	public UserController(S3UploaderService s3UploaderService){
+		this.s3Uploader = s3UploaderService;
+	}
+
+	@PostMapping("/images")
+	public String upload(@RequestParam("images") MultipartFile multipartFile) throws IOException {
+		s3Uploader.upload(multipartFile, "static");
+		return "test";
+	}
+	// s3 참고자료
+
+	/*
+	https://velog.io/@eeheaven/SpringBoot-AndroidStudio-KnockKnock-%EA%B0%9C%EB%B0%9C%EC%9D%BC%EC%A7%80-0227-%EA%B2%8C%EC%8B%9C%EA%B8%80-%EC%9E%91%EC%84%B1-%EC%8B%9C-%EC%9D%B4%EB%AF%B8%EC%A7%80-%EB%84%A3%EA%B8%B0-Server-%EA%B0%9C%EB%B0%9C
+	 */
+
 
 //	private FileService fileService;
 	
@@ -45,11 +59,7 @@ public class UserController {
 		return "upload";		// 반환해주는 html이름
 	}
 
-	private final FileDataService fileDataService;
 
-	public UserController(FileDataService fileDataService){
-		this.fileDataService = fileDataService;
-	}
 
 // 업로드한 파일 설정
 	@RequestMapping(value = {"/upload"})
