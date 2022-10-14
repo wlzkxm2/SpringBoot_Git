@@ -1,12 +1,16 @@
 package com.probono.controller;
 
+import com.probono.S3.S3DownloadService;
 import com.probono.S3.S3UploaderService;
 import com.probono.entity.Files;
 import com.probono.entity.User;
 import com.probono.repo.FileRepo;
 import com.probono.repo.UserRepo;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -24,6 +28,7 @@ import java.util.*;
 @Controller
 @RestController
 @Slf4j
+@RequiredArgsConstructor
 public class UserController {
 
 	@Autowired(required = true)
@@ -32,22 +37,32 @@ public class UserController {
 	@Autowired(required = true)
 	private FileRepo fileRepo;
 
-	private final S3UploaderService s3Uploader;
+	private final S3UploaderService s3UploaderService;
+	private final S3DownloadService s3DownloadService;
 
-	public UserController(S3UploaderService s3UploaderService){
-		this.s3Uploader = s3UploaderService;
-	}
 
 	@PostMapping("/images")
-	public String upload(@RequestParam("images") MultipartFile multipartFile) throws IOException {
-		s3Uploader.upload(multipartFile, "static");
-		return "test";
+	@ResponseBody
+	public String upload(@RequestParam(value = "data", defaultValue = "data") MultipartFile multipartFile) throws IOException {
+		System.out.println(s3UploaderService.upload(multipartFile, "static"));
+		return s3UploaderService.upload(multipartFile, "static");
 	}
 	// s3 참고자료
 
 	/*
 	https://velog.io/@eeheaven/SpringBoot-AndroidStudio-KnockKnock-%EA%B0%9C%EB%B0%9C%EC%9D%BC%EC%A7%80-0227-%EA%B2%8C%EC%8B%9C%EA%B8%80-%EC%9E%91%EC%84%B1-%EC%8B%9C-%EC%9D%B4%EB%AF%B8%EC%A7%80-%EB%84%A3%EA%B8%B0-Server-%EA%B0%9C%EB%B0%9C
-	 */
+	https://jojoldu.tistory.com/300
+	https://dblog94.tistory.com/entry/Spring-AWS-S3%EB%A5%BC-%EC%97%B0%EB%8F%99%ED%95%98%EA%B8%B0
+	*/
+
+	@GetMapping("/CloudDownload/{fileName}")
+	public ResponseEntity<byte[]> download(@PathVariable String fileName) throws IOException{
+		return s3DownloadService.getObject(fileName);
+	}
+
+	// s3 다운로드
+	// https://gksdudrb922.tistory.com/151
+
 
 
 //	private FileService fileService;
@@ -64,7 +79,7 @@ public class UserController {
 // 업로드한 파일 설정
 	@RequestMapping(value = {"/upload"})
 	public ResponseEntity<Map<String, String>> upload(List<MultipartFile> files, HttpServletRequest request) {
-/*
+
 		files.forEach(file -> {
 			System.out.println(file.getContentType());	// 업로드 받은 파일 타입 디버깅
 			System.out.println(file.getOriginalFilename());	// 업로드 받은 받은 파일 이름
@@ -139,30 +154,9 @@ public class UserController {
 
 
 		return ResponseEntity.ok(resultMap);
- */
-
-		files.forEach(file -> {
-
-			try{
-//				Files saveFile = new Files();
-//				saveFile.setFilename(destinationFileName);
-//				saveFile.setFileOriname(sourceFileName);
-//				saveFile.setFileUrl(fileUrl);
-//				saveFile.setUserID(findid);
-//				Files addFile = fileRepo.save(saveFile);
 
 
-			} catch (Exception e){
 
-			}
-
-		});
-
-		HashMap<String, String> resultMap = new HashMap<>();
-		resultMap.put("result", "success");
-
-
-		return ResponseEntity.ok(resultMap);
 	}
 
 	@RestController
