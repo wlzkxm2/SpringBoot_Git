@@ -33,7 +33,7 @@ public class S3DownloadService {
      * S3 bucket 파일 다운로드
      */
     public ResponseEntity<byte[]> getObject(String storedFileName) throws IOException {
-        S3Object o = amazonS3Client.getObject(new GetObjectRequest(bucket, storedFileName));
+        S3Object o = amazonS3Client.getObject(new GetObjectRequest(bucket, "static/" + storedFileName));
         S3ObjectInputStream objectInputStream = ((S3Object) o).getObjectContent();
         byte[] bytes = IOUtils.toByteArray(objectInputStream);
 

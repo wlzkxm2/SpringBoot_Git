@@ -43,9 +43,9 @@ public class UserController {
 
 	@PostMapping("/images")
 	@ResponseBody
-	public String upload(@RequestParam(value = "data", defaultValue = "data") MultipartFile multipartFile) throws IOException {
-		System.out.println(s3UploaderService.upload(multipartFile, "static"));
-		return s3UploaderService.upload(multipartFile, "static");
+	public String upload(@RequestParam(value = "data", defaultValue = "data") MultipartFile multipartFile, String fileName) throws IOException {
+//		System.out.println(s3UploaderService.upload(multipartFile, "static"));
+		return s3UploaderService.upload(multipartFile, "static", fileName);
 	}
 	// s3 참고자료
 
@@ -90,29 +90,37 @@ public class UserController {
 			String findid = sourceFileName.substring(0, inputid);
 			System.out.println("에러1 ");
 
+			// 확장자를 빼고 파일 이름만 받아오기
 			FilenameUtils.removeExtension(sourceFileName);
 
 			File destinationFile;
 			String destinationFileName;
-			String fileUrl = "\\home\\ec2-user\\SpringDB\\";	// 다운경로
+//			String fileUrl = "\\home\\ec2-user\\SpringDB\\";	// 다운경로
 
 
-			System.out.println("에러 2");
-
-			do{
-				destinationFileName = RandomStringUtils.randomAlphanumeric(32) + "." + sourceFileExtension;		// 파일 이름 랜덤 암호화
-				destinationFile = new File(fileUrl + destinationFileName);
-			}while (destinationFile.exists());
-
-			destinationFile.getParentFile().mkdirs();
+//			System.out.println("에러 2");
+//
+//			do{
+//				destinationFileName = RandomStringUtils.randomAlphanumeric(32) + "." + sourceFileExtension;		// 파일 이름 랜덤 암호화
+//				destinationFile = new File(fileUrl + destinationFileName);
+//			}while (destinationFile.exists());
+//
+//			destinationFile.getParentFile().mkdirs();
+//			try {
+//				file.transferTo(destinationFile);
+//
+//			} catch (IOException e) {
+//				System.out.println("에러 : " + e);
+//				throw new RuntimeException(e);
+//			}
 			try {
-				file.transferTo(destinationFile);
+				destinationFileName = RandomStringUtils.randomAlphanumeric(32) + "." + sourceFileExtension;		// 파일 이름 랜덤 암호화
+				// 랜덤 암호화된 이름으로파일 업로드
+				String uploadUrl = upload(file, destinationFileName);
 
-			} catch (IOException e) {
-				System.out.println("에러 : " + e);
-				throw new RuntimeException(e);
+			}catch (Exception e){
+
 			}
-
 			try{
 				System.out.println("final android id : " + findid);
 //

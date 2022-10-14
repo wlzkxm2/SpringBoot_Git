@@ -26,9 +26,9 @@ public class S3UploaderService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public String upload(MultipartFile file, String dirName) throws IOException {
+    public String upload(MultipartFile file, String dirName, String fileName) throws IOException {
         File uploadFile = convert(file).orElseThrow(() -> new IllegalArgumentException("file 전달에 실패했습니다."));
-        File news= new File(System.getProperty("user.dir") + "/" + UUID.randomUUID() + ".jpg");
+        File news= new File(ffileNameilename + ".jpg");
         uploadFile.renameTo(news);
         return upload(news, dirName);
     }
