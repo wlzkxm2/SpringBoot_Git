@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.probono</groupId>
 	<artifactId>probono_login</artifactId>
-	<version>0.0.3-SNAPSHOT</version>
+	<version>0.0.4-SNAPSHOT</version>
 	<name>probono_login</name>
 	<description>probono login</description>
 	<packaging>jar</packaging>

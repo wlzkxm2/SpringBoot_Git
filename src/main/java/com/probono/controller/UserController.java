@@ -7,6 +7,7 @@ import com.probono.entity.User;
 import com.probono.repo.FileRepo;
 import com.probono.repo.UserRepo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -24,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Controller
 @RestController
@@ -40,13 +42,15 @@ public class UserController {
 	private final S3UploaderService s3UploaderService;
 	private final S3DownloadService s3DownloadService;
 
-
+/*
 	@PostMapping("/images")
 	@ResponseBody
-	public String upload(@RequestParam(value = "data", defaultValue = "data") MultipartFile multipartFile, String fileName) throws IOException {
+	public String s3upload(@RequestParam(value = "data", defaultValue = "data") MultipartFile multipartFile, String fileName) throws IOException {
 //		System.out.println(s3UploaderService.upload(multipartFile, "static"));
 		return s3UploaderService.upload(multipartFile, "static", fileName);
 	}
+
+ */
 	// s3 참고자료
 
 	/*
@@ -58,6 +62,14 @@ public class UserController {
 	@GetMapping("/CloudDownload/{fileName}")
 	public ResponseEntity<byte[]> download(@PathVariable String fileName) throws IOException{
 		return s3DownloadService.getObject(fileName);
+	}
+
+	// 데이터 삭제 테스트
+	@GetMapping("/testDelete/{fileName}")
+	public ResponseEntity<byte[]> TestdeleteFiles(@PathVariable String fileName) throws IOException{
+//		File deletethisFile = new File(fileName + ".jpg");
+		s3UploaderService.deleteFile(fileName);
+		return null;
 	}
 
 	// s3 다운로드
@@ -76,86 +88,43 @@ public class UserController {
 
 
 
-// 업로드한 파일 설정
-	@RequestMapping(value = {"/upload"})
-	public ResponseEntity<Map<String, String>> upload(List<MultipartFile> files, HttpServletRequest request) {
+	// 업로드 되나 테스트용
 
-		files.forEach(file -> {
-			System.out.println(file.getContentType());	// 업로드 받은 파일 타입 디버깅
-			System.out.println(file.getOriginalFilename());	// 업로드 받은 받은 파일 이름
+	@RequestMapping(value = {"/testService"})
+	public ResponseEntity<Map<String, String>> upload(List<MultipartFile> files, HttpServletRequest request){
+		String fileName = "uploadDataTest";
+		try {
+			files.forEach(file -> {
 
-			String sourceFileName = file.getOriginalFilename();		// 업로드 받은 원본 파일 이름 저장
-			String sourceFileExtension = FilenameUtils.getExtension(sourceFileName).toLowerCase();	// 업로드 받은 원본파일 소문자로 저장
-			int inputid = sourceFileName.lastIndexOf("_");
-			String findid = sourceFileName.substring(0, inputid);
-			System.out.println("에러1 ");
+				System.out.println(file.getContentType());	// 업로드 받은 파일 타입 디버깅
+				System.out.println(file.getOriginalFilename());	// 업로드 받은 받은 파일 이름
 
-			// 확장자를 빼고 파일 이름만 받아오기
-			FilenameUtils.removeExtension(sourceFileName);
+				String sourceFileName = file.getOriginalFilename();		// 업로드 받은 원본 파일 이름 저장
+				String sourceFileExtension = FilenameUtils.getExtension(sourceFileName).toLowerCase();	// 업로드 받은 원본파일 소문자로 저장
+				int inputid = sourceFileName.lastIndexOf("_");
+				String findid = sourceFileName.substring(0, inputid);
 
-			File destinationFile;
-			String destinationFileName;
-//			String fileUrl = "\\home\\ec2-user\\SpringDB\\";	// 다운경로
+				System.out.println(sourceFileExtension);		// 전달받은 파일 확장자
+				System.out.println(findid);		// 전달받은 파일의 유저 정보
 
+				String destinationFileName = RandomStringUtils.randomAlphanumeric(32);		// 파일 이름 랜덤 암호화
+				String destinationFileNameFull = RandomStringUtils.randomAlphanumeric(32) + "." + sourceFileExtension;		// 파일 이름 랜덤 암호화 후 확장자까지
 
-//			System.out.println("에러 2");
-//
-//			do{
-//				destinationFileName = RandomStringUtils.randomAlphanumeric(32) + "." + sourceFileExtension;		// 파일 이름 랜덤 암호화
-//				destinationFile = new File(fileUrl + destinationFileName);
-//			}while (destinationFile.exists());
-//
-//			destinationFile.getParentFile().mkdirs();
-//			try {
-//				file.transferTo(destinationFile);
-//
-//			} catch (IOException e) {
-//				System.out.println("에러 : " + e);
-//				throw new RuntimeException(e);
-//			}
-			try {
-				destinationFileName = RandomStringUtils.randomAlphanumeric(32) + "." + sourceFileExtension;		// 파일 이름 랜덤 암호화
-				// 랜덤 암호화된 이름으로파일 업로드
-				String uploadUrl = upload(file, destinationFileName);
+				try{
 
-			}catch (Exception e){
+					String fileUrl = s3UploaderService.upload(file, "static", destinationFileName);
+					System.out.println(fileUrl);
+					setFilesDB(findid, destinationFileName, sourceFileName);
 
-			}
-			try{
-				System.out.println("final android id : " + findid);
-//
-				Optional<Files> findFile = fileRepo.findById(findid);
-//				System.out.println("찾은 파일 이름 : " + findFile.get().getFileOriname());
-				if(findFile.isEmpty() == false){
-					fileRepo.deleteById(findid);		// 만약 파일있다면 삭제
-//					String deleteFilePath = "D:\\Shingu\\shingu\\SpringBootDocument\\probono_login\\src\\main\\src\\main\\resources\\static\\SpringDB\\" + findFile.get().getFilename();
-//					File deleteFile = new File(deleteFilePath);
-					System.out.println("저장된 파일 이름 : " + findFile.get().getFilename());
-					System.out.println("저장된 파일 경로 : " + findFile.get().getFileUrl());
-					String Filename = findFile.get().getFilename();		// 삭제할 파일의 이름
-					String FilePath = findFile.get().getFileUrl();		// 삭제할 파일의 경로
-
-					String deleteFilePath = FilePath + Filename;
-					System.out.println("완전체 : " + deleteFilePath);
-					File deleteFile = new File(deleteFilePath);		// 삭제할 파일을 타겟
-					deleteFile.delete();			// 파일을 삭제
-					System.out.println("파일을 삭제 하엿습니다");
-
+				}catch (Exception e){
+					System.out.println(e);
 				}
 
-				Files saveFile = new Files();
-				saveFile.setFilename(destinationFileName);
-				saveFile.setFileOriname(sourceFileName);
-				saveFile.setFileUrl(fileUrl);
-				saveFile.setUserID(findid);
-				Files addFile = fileRepo.save(saveFile);
+			});
 
-
-			} catch (Exception e){
-
-			}
-
-		});
+		}catch (Exception e){
+			System.out.println(e);
+		}
 
 		HashMap<String, String> resultMap = new HashMap<>();
 		resultMap.put("result", "success");
@@ -163,13 +132,156 @@ public class UserController {
 
 		return ResponseEntity.ok(resultMap);
 
+	}
+
+	private void setFilesDB(String findid, String destinationFileName, String sourceFileName){
+
+		try {
+			Optional<Files> findFile = fileRepo.findById(findid);
+			String output = findFile.toString();
+			System.out.println(output);
+
+			System.out.println("찾은 파일 이름 : " + findFile.get().getFileOriname());
+			if(findFile.isEmpty() == false){
+//					fileRepo.deleteById(findid);		// 만약 파일있다면 삭제
+//					String deleteFilePath = "D:\\Shingu\\shingu\\SpringBootDocument\\probono_login\\src\\main\\src\\main\\resources\\static\\SpringDB\\" + findFile.get().getFilename();
+//					File deleteFile = new File(deleteFilePath);
+
+				String Filename = findFile.get().getFilename();		// 삭제할 파일의 이름
+				String FilePath = findFile.get().getFileUrl();		// 삭제할 파일의 경로
+
+				try {
+					// 파일을 삭제
+					s3UploaderService.deleteFile(Filename + ".txt");
+					log.info("파일을 삭제 하엿습니다");
+
+				} catch (Exception e){
+					log.info("파일이 없습니다");
+				}finally {
+					fileRepo.deleteById(findid);
+					log.info("DB 유저 정보 삭제 했습니다");
+
+				}
+
+			}else{
+				log.info("해당 유저의 데이터 정보가 없습니다");
+			}
+		} catch (Exception e){
+			System.out.println("DB 검색 에러 : " + e);
+		} finally {
+			Files saveFile = new Files();
+			saveFile.setFilename(destinationFileName + ".txt");
+			saveFile.setFileOriname(sourceFileName);
+			saveFile.setFileUrl("static/"+ destinationFileName);
+			saveFile.setUserID(findid);
+			Files addFile = fileRepo.save(saveFile);
+
+		}
+
 
 
 	}
 
+
+
+
+// 업로드한 파일 설정
 	@RestController
 	@RequestMapping("/api")
 	public class Sample{
+
+	@RequestMapping(value = {"/upload"})
+	public ResponseEntity<Map<String, String>> upload(List<MultipartFile> files, HttpServletRequest request) {
+
+		try{
+			files.forEach(file -> {
+				log.info(file.getContentType());		// 업로드 받은 파일 타입 디버깅
+				log.info(file.getOriginalFilename());		// 업로드 받은 받은 파일 이름
+				System.out.println("1: ------------------------------------------------");
+
+				String sourceFileName = file.getOriginalFilename();		// 업로드 받은 원본 파일 이름 저장
+				String sourceFileExtension = FilenameUtils.getExtension(sourceFileName).toLowerCase();	// 업로드 받은 원본파일 소문자로 저장
+				int inputid = sourceFileName.lastIndexOf("_");
+				String findid = sourceFileName.substring(0, inputid);
+
+				log.info(sourceFileExtension);		// 전달받은 파일 확장자
+				log.info(findid);		// 전달받은 파일 유저 정보
+
+				// 확장자를 빼고 파일 이름만 받아오기
+//				FilenameUtils.removeExtension(sourceFileName);
+				System.out.println("2: ------------------------------------------------");
+
+//				File destinationFile;
+				String destinationFileName;
+
+				destinationFileName = RandomStringUtils.randomAlphanumeric(32) + "." + sourceFileExtension;		// 파일 이름 랜덤 암호화
+				log.info("암호화된 이름 : " + destinationFileName);		// 암호화된 이름
+				System.out.println("3: ------------------------------------------------");
+
+				System.out.println("이름 암호화까지");
+
+				try {
+					// 랜덤 암호화된 이름으로파일 업로드
+					String fileUrl = s3UploaderService.upload(file, "static", destinationFileName);
+					System.out.println("4: ------------------------------------------------");
+
+				}catch (Exception e){
+					System.out.println("에러 : " + e);
+				}
+
+				try{
+					System.out.println("final android id : " + findid);
+//
+					Optional<Files> findFile = fileRepo.findById(findid);
+				System.out.println("찾은 파일 이름 : " + findFile.get().getFileOriname());
+					if(findFile.isEmpty() == false){
+//					fileRepo.deleteById(findid);		// 만약 파일있다면 삭제
+//					String deleteFilePath = "D:\\Shingu\\shingu\\SpringBootDocument\\probono_login\\src\\main\\src\\main\\resources\\static\\SpringDB\\" + findFile.get().getFilename();
+//					File deleteFile = new File(deleteFilePath);
+
+						log.info("저장된 파일 이름 : " + findFile.get().getFilename());
+						log.info("저장된 파일 경로 : " + findFile.get().getFileUrl());
+
+						String Filename = findFile.get().getFilename();		// 삭제할 파일의 이름
+						String FilePath = findFile.get().getFileUrl();		// 삭제할 파일의 경로
+
+						String deleteFilePath = FilePath + Filename;
+						log.info("완전체 : " + deleteFilePath);
+
+						// 파일을 삭제
+//						s3UploaderService.deleteFile(Filename);
+						log.info("파일을 삭제 하엿습니다");
+
+					}
+
+					// 파일을 삭제하거나 또는 원래 유저명에 없었을때
+					// DB에 추가
+					Files saveFile = new Files();
+					saveFile.setFilename(destinationFileName);
+					saveFile.setFileOriname(sourceFileName);
+					saveFile.setFileUrl("Stable/"+ destinationFileName);
+					saveFile.setUserID(findid);
+					Files addFile = fileRepo.save(saveFile);
+
+
+				} catch (Exception e){
+
+				}
+
+			});
+
+		}catch (Exception e){
+			log.info("에러" + e);
+		}
+
+		HashMap<String, String> resultMap = new HashMap<>();
+		resultMap.put("result", "success");
+
+		return ResponseEntity.ok(resultMap);
+
+
+
+	}
 
 		String getFileName;
 // 업로드 되어있는 파일 다운

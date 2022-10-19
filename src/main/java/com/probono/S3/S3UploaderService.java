@@ -28,7 +28,7 @@ public class S3UploaderService {
 
     public String upload(MultipartFile file, String dirName, String fileName) throws IOException {
         File uploadFile = convert(file).orElseThrow(() -> new IllegalArgumentException("file 전달에 실패했습니다."));
-        File news= new File(ffileNameilename + ".jpg");
+        File news= new File(fileName + ".txt");
         uploadFile.renameTo(news);
         return upload(news, dirName);
     }
@@ -45,6 +45,12 @@ public class S3UploaderService {
         return amazonS3Client.getUrl(bucket, fileName).toString();
     }
 
+
+    // 독자적으로 실행하는 파일 삭제
+    public void deleteFile(String fileName){
+        DeleteObjectRequest request = new DeleteObjectRequest(bucket, "static/" + fileName);
+        amazonS3Client.deleteObject(request);
+    }
     private void removeNewFile(File targetFile) {
         if (targetFile.delete()) {
             log.info("파일 삭제 완료");
